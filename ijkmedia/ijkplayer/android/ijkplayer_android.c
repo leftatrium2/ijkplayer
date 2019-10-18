@@ -31,16 +31,18 @@
 #include "../pipeline/ffpipeline_ffplay.h"
 #include "pipeline/ffpipeline_android.h"
 
-IjkMediaPlayer *ijkmp_android_create(int(*msg_loop)(void*))
-{
+IjkMediaPlayer *ijkmp_android_create(int(*msg_loop)(void *)) {
+//    创建底层播放器对象，设置消息处理函数
     IjkMediaPlayer *mp = ijkmp_create(msg_loop);
     if (!mp)
         goto fail;
 
+//    创建图像渲染对象
     mp->ffplayer->vout = SDL_VoutAndroid_CreateForAndroidSurface();
     if (!mp->ffplayer->vout)
         goto fail;
 
+//    初始化视频解码器（软/硬）、音频输出设备（opensles/audioTrack）
     mp->ffplayer->pipeline = ffpipeline_create_from_android(mp->ffplayer);
     if (!mp->ffplayer->pipeline)
         goto fail;
@@ -49,13 +51,12 @@ IjkMediaPlayer *ijkmp_android_create(int(*msg_loop)(void*))
 
     return mp;
 
-fail:
+    fail:
     ijkmp_dec_ref_p(&mp);
     return NULL;
 }
 
-void ijkmp_android_set_surface_l(JNIEnv *env, IjkMediaPlayer *mp, jobject android_surface)
-{
+void ijkmp_android_set_surface_l(JNIEnv *env, IjkMediaPlayer *mp, jobject android_surface) {
     if (!mp || !mp->ffplayer || !mp->ffplayer->vout)
         return;
 
@@ -63,24 +64,22 @@ void ijkmp_android_set_surface_l(JNIEnv *env, IjkMediaPlayer *mp, jobject androi
     ffpipeline_set_surface(env, mp->ffplayer->pipeline, android_surface);
 }
 
-void ijkmp_android_set_surface(JNIEnv *env, IjkMediaPlayer *mp, jobject android_surface)
-{
+void ijkmp_android_set_surface(JNIEnv *env, IjkMediaPlayer *mp, jobject android_surface) {
     if (!mp)
         return;
 
-    MPTRACE("ijkmp_set_android_surface(surface=%p)", (void*)android_surface);
+            MPTRACE("ijkmp_set_android_surface(surface=%p)", (void *) android_surface);
     pthread_mutex_lock(&mp->mutex);
     ijkmp_android_set_surface_l(env, mp, android_surface);
     pthread_mutex_unlock(&mp->mutex);
-    MPTRACE("ijkmp_set_android_surface(surface=%p)=void", (void*)android_surface);
+            MPTRACE("ijkmp_set_android_surface(surface=%p)=void", (void *) android_surface);
 }
 
-void ijkmp_android_set_volume(JNIEnv *env, IjkMediaPlayer *mp, float left, float right)
-{
+void ijkmp_android_set_volume(JNIEnv *env, IjkMediaPlayer *mp, float left, float right) {
     if (!mp)
         return;
 
-    MPTRACE("ijkmp_android_set_volume(%f, %f)", left, right);
+            MPTRACE("ijkmp_android_set_volume(%f, %f)", left, right);
     pthread_mutex_lock(&mp->mutex);
 
     if (mp && mp->ffplayer && mp->ffplayer->pipeline) {
@@ -88,16 +87,15 @@ void ijkmp_android_set_volume(JNIEnv *env, IjkMediaPlayer *mp, float left, float
     }
 
     pthread_mutex_unlock(&mp->mutex);
-    MPTRACE("ijkmp_android_set_volume(%f, %f)=void", left, right);
+            MPTRACE("ijkmp_android_set_volume(%f, %f)=void", left, right);
 }
 
-int ijkmp_android_get_audio_session_id(JNIEnv *env, IjkMediaPlayer *mp)
-{
+int ijkmp_android_get_audio_session_id(JNIEnv *env, IjkMediaPlayer *mp) {
     int audio_session_id = 0;
     if (!mp)
         return audio_session_id;
 
-    MPTRACE("%s()", __func__);
+            MPTRACE("%s()", __func__);
     pthread_mutex_lock(&mp->mutex);
 
     if (mp && mp->ffplayer && mp->ffplayer->aout) {
@@ -105,17 +103,18 @@ int ijkmp_android_get_audio_session_id(JNIEnv *env, IjkMediaPlayer *mp)
     }
 
     pthread_mutex_unlock(&mp->mutex);
-    MPTRACE("%s()=%d", __func__, audio_session_id);
+            MPTRACE("%s()=%d", __func__, audio_session_id);
 
     return audio_session_id;
 }
 
-void ijkmp_android_set_mediacodec_select_callback(IjkMediaPlayer *mp, bool (*callback)(void *opaque, ijkmp_mediacodecinfo_context *mcc), void *opaque)
-{
+void ijkmp_android_set_mediacodec_select_callback(IjkMediaPlayer *mp, bool (*callback)(void *opaque,
+                                                                                       ijkmp_mediacodecinfo_context *mcc),
+                                                  void *opaque) {
     if (!mp)
         return;
 
-    MPTRACE("ijkmp_android_set_mediacodec_select_callback()");
+            MPTRACE("ijkmp_android_set_mediacodec_select_callback()");
     pthread_mutex_lock(&mp->mutex);
 
     if (mp && mp->ffplayer && mp->ffplayer->pipeline) {
@@ -123,5 +122,5 @@ void ijkmp_android_set_mediacodec_select_callback(IjkMediaPlayer *mp, bool (*cal
     }
 
     pthread_mutex_unlock(&mp->mutex);
-    MPTRACE("ijkmp_android_set_mediacodec_select_callback()=void");
+            MPTRACE("ijkmp_android_set_mediacodec_select_callback()=void");
 }
